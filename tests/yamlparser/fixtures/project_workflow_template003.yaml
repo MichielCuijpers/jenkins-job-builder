@@ -1,7 +1,7 @@
 - job-template:
     name: '{name}-unit-tests'
     project-type: workflow
-    dsl: |
+    script: |
         build job: "job1"
         parallel [
           2a: build job: "job2a",
