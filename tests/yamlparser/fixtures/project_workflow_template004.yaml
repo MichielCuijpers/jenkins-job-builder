@@ -1,0 +1,12 @@
+- job:
+    name: test_job
+    project-type: workflow
+    project-type: workflow
+    workflow:
+        script-path: flow.groovy
+        scm:
+            git:
+                url: 'https://github.com/openstack-infra/jenkins-job-builder.git'
+                credentials-id: 'some-github-credentials'
+                ignore-notify: true
+                shallow-clone: true

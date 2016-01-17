@@ -1,0 +1,47 @@
+<flow-definition plugin="workflow-job">
+	<definition class="org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition" plugin="workflow-cps">
+		<scm class="hudson.plugins.git.GitSCM" plugin="git">
+			<configVersion>2</configVersion>
+			<userRemoteConfigs>
+				<hudson.plugins.git.UserRemoteConfig>
+					<url>
+						https://github.com/openstack-infra/jenkins-job-builder.git
+					</url>
+					<credentialsId>some-github-credentials</credentialsId>
+				</hudson.plugins.git.UserRemoteConfig>
+			</userRemoteConfigs>
+			<branches>
+				<hudson.plugins.git.BranchSpec>
+					<name>**</name>
+				</hudson.plugins.git.BranchSpec>
+			</branches>
+			<doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+			<submoduleCfg class="list"/>
+			<extensions>
+				<ignoreNotifyCommit>true</ignoreNotifyCommit>
+				<useShallowClone>true</useShallowClone>
+			</extensions>
+		</scm>
+		<scriptPath>flow.groovy</scriptPath>
+	</definition>
+	<jdk>JDK 1.8</jdk>
+	<actions/>
+	<description>
+		Workflow demo<!-- Managed by Jenkins Job Builder -->
+	</description>
+	<keepDependencies>false</keepDependencies>
+	<disabled>false</disabled>
+	<blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+	<blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+	<concurrentBuild>false</concurrentBuild>
+	<canRoam>true</canRoam>
+	<logRotator>
+		<daysToKeep>7</daysToKeep>
+		<numToKeep>5</numToKeep>
+		<artifactDaysToKeep>-1</artifactDaysToKeep>
+		<artifactNumToKeep>-1</artifactNumToKeep>
+	</logRotator>
+	<scm class="hudson.scm.NullSCM"/>
+	<publishers/>
+	<buildWrappers/>
+</flow-definition>
