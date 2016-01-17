@@ -66,7 +66,7 @@ import jenkins_jobs.modules.base
 class Workflow(jenkins_jobs.modules.base.Base):
     sequence = 0
 
-def root_xml(self, data):
+    def root_xml(self, data):
         xml_parent = XML.Element('flow-definition')
         xml_parent.attrib['plugin'] = 'workflow-job'
 
@@ -77,11 +77,9 @@ def root_xml(self, data):
         if 'workflow' not in data:
             return xml_parent
 
-        if 'scm' in data['workflow']:
-            #self.registry.dispatch('scm', self, definition, data['workflow']['scm'])
-            if 'git' in data['workflow']['scm']:
-                self.git(definition, data['workflow']['scm']['git'])
-                definition.attrib['class'] = 'org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition'
+        if 'git' in data['workflow']['scm']:
+            self.git(definition, data['workflow']['scm']['git'])
+            definition.attrib['class'] = 'org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition'
 
         if 'script' in data['workflow']:
             XML.SubElement(definition, 'script').text = data['workflow'].get('script', '')
@@ -91,7 +89,6 @@ def root_xml(self, data):
 
         if 'script-path' in data['workflow']:
             XML.SubElement(definition, 'scriptPath').text = data['workflow'].get('script-path', '')
-
 
         return xml_parent
 
