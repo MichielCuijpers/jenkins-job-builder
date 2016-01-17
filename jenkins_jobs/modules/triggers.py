@@ -1535,6 +1535,45 @@ def groovy_script(parser, xml_parent, data):
         XML.SubElement(gst, 'triggerLabel').text = label
     XML.SubElement(gst, 'spec').text = str(data.get('cron', ''))
 
+def stash_pullrequest_builder(parser, xml_parent, data):
+    """yaml: stash-pullrequest-builder
+    Build pull requests in stash and report results.
+    Requires the Jenkins :jenkins-wiki:`Stash Pullrequest Builder Plugin
+    <Stash+pullrequest+builder+plugin>`.
+
+    :arg string spec: for example * * * * *
+    :arg string cron: abc
+    :arg string stash-host: abc
+    :arg string credentials-id: the credentials-id
+    :arg string project-code: abc
+    :arg string repository-name: abc
+    :arg string ci-skip-phrases: abc
+    :arg string ci-build-phrases: abc
+    :arg bool check-destination-commit: abc
+    :arg bool check-mergeable: abc
+    :arg bool check-not-conflicted: abc
+    :arg bool only-build-on-comment: abc
+
+    Example::
+     .. literalinclude:: \
+    /../../tests/triggers/fixtures/stash-pullrequest-builder.yaml
+
+    """
+    stprb = XML.SubElement(xml_parent, 'stashpullrequestbuilder.stashpullrequestbuilder.'
+                           'StashBuildTrigger')
+    XML.SubElement(stprb, 'spec').text = data.get('cron')
+    XML.SubElement(stprb, 'cron').text = data.get('cron')
+    XML.SubElement(stprb, 'stashHost').text = data.get('stash-host')
+    XML.SubElement(stprb, 'credentialsId').text = data.get('credentials-id')
+    XML.SubElement(stprb, 'projectCode').text = data.get('project-code')
+    XML.SubElement(stprb, 'repositoryName').text = data.get('repository-name')
+    XML.SubElement(stprb, 'ciSkipPhrases').text = str(
+        data.get('ci-skip-phrases', False)).lower()
+    XML.SubElement(stprb, 'ciBuildPhrases').text = data.get('ci-build-phrases')
+    XML.SubElement(stprb, 'checkDestinationCommit').text = data.get('check-destination-commit')
+    XML.SubElement(stprb, 'checkMergeable').text = data.get('check-mergeable')
+    XML.SubElement(stprb, 'checkNotConflicted').text = data.get('check-not-conflicted')
+    XML.SubElement(stprb, 'onlyBuildOnComment').text = data.get('only-build-on-comment')
 
 class Triggers(jenkins_jobs.modules.base.Base):
     sequence = 50
