@@ -61,6 +61,7 @@ import logging
 import xml.etree.ElementTree as XML
 from jenkins_jobs.errors import (JenkinsJobsException)
 import jenkins_jobs.modules.base
+import jenkins_jobs.modules.parameters
 
 
 class Workflow(jenkins_jobs.modules.base.Base):
@@ -76,6 +77,9 @@ class Workflow(jenkins_jobs.modules.base.Base):
 
         if 'workflow' not in data:
             return xml_parent
+
+        if 'properties' in data['workflow']:
+            Parameters.gen_xml(self, definition, data)
 
         if 'git' in data['workflow']['scm']:
             self.git(definition, data['workflow']['scm']['git'])
