@@ -43,18 +43,18 @@ python str.format() command.
 Job with inline script example:
 
     .. literalinclude::
-      /../../tests/yamlparser/fixtures/project_workflow_template001.yaml
+      /../../tests/yamlparser/fixtures/project_pipeline_template001.yaml
 
 Job with external script example:
 
     .. literalinclude::
-      /../../tests/yamlparser/fixtures/project_workflow_template004.yaml
+      /../../tests/yamlparser/fixtures/project_pipeline_template004.yaml
 
 
 Job template example:
 
     .. literalinclude::
-      /../../tests/yamlparser/fixtures/project_workflow_template002.yaml
+      /../../tests/yamlparser/fixtures/project_pipeline_template002.yaml
 
 """
 import logging
@@ -64,7 +64,7 @@ import jenkins_jobs.modules.base
 import jenkins_jobs.modules.parameters
 
 
-class Workflow(jenkins_jobs.modules.base.Base):
+class Pipeline(jenkins_jobs.modules.base.Base):
     sequence = 0
 
     def root_xml(self, data):
@@ -75,29 +75,30 @@ class Workflow(jenkins_jobs.modules.base.Base):
         definition.attrib['class'] = 'org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition'
         definition.attrib['plugin'] = 'workflow-cps'
 
-        if 'workflow' not in data:
+        if 'pipeline' not in data:
             return xml_parent
 
-        if 'properties' in data['workflow']:
+        pipeline = data['pipeline']
+
+        if 'properties' in pipeline:
             Parameters.gen_xml(self, definition, data)
 
-        if 'git' in data['workflow']['scm']:
-            self.git(definition, data['workflow']['scm']['git'])
+        if 'scm' in pipeline and 'git' in pipeline['scm']:
+            self.git(definition, pipeline['scm']['git'])
             definition.attrib['class'] = 'org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition'
 
-        if 'script' in data['workflow']:
-            XML.SubElement(definition, 'script').text = data['workflow'].get('script', '')
-            if 'sandbox' in data['workflow']:
-                needs_workspace = data['workflow'].get('sandbox', False)
-                XML.SubElement(definition, 'sandbox').text = str(needs_workspace).lower()
+        if 'script' in pipeline:
+            XML.SubElement(definition, 'script').text = pipeline.get('script', '')
+            needs_workspace = pipeline.get('sandbox', True)
+            XML.SubElement(definition, 'sandbox').text = str(needs_workspace).lower()
 
-        if 'script-path' in data['workflow']:
-            XML.SubElement(definition, 'scriptPath').text = data['workflow'].get('script-path', '')
+        if 'script-path' in pipeline:
+            XML.SubElement(definition, 'scriptPath').text = pipeline.get('script-path', '')
 
         return xml_parent
 
     def git(self, xml_parent, data):
-        logger = logging.getLogger("%s:workflow-git" % __name__)
+        logger = logging.getLogger("%s:pipeline-git" % __name__)
         scm = XML.SubElement(xml_parent,
                              'scm', {'class': 'hudson.plugins.git.GitSCM'})
         scm.attrib['plugin'] = 'git'
