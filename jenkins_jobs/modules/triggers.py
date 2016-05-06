@@ -1558,6 +1558,33 @@ def groovy_script(parser, xml_parent, data):
         XML.SubElement(gst, 'triggerLabel').text = label
     XML.SubElement(gst, 'spec').text = str(data.get('cron', ''))
 
+def rabbitmq(parser, xml_parent, data):
+    """yaml: rabbitmq
+    This plugin triggers build using remote build message in RabbitMQ queue.
+    Requires the Jenkins :jenkins-wiki:`RabbitMQ Build Trigger Plugin
+    <RabbitMQ+Build+Trigger+Plugin>`.
+
+    :arg str token: the build token expected in the message queue (required)
+
+    Example:
+
+    .. literalinclude:: /../../tests/triggers/fixtures/rabbitmq.yaml
+       :language: yaml
+    """
+
+    rabbitmq = XML.SubElement(
+        xml_parent,
+        'org.jenkinsci.plugins.rabbitmqbuildtrigger.'
+        'RemoteBuildTrigger')
+
+    XML.SubElement(rabbitmq, 'spec').text = ''
+
+    try:
+        XML.SubElement(rabbitmq, 'remoteBuildToken').text = str(
+            data.get('token'))
+    except KeyError as e:
+        raise MissingAttributeError(e.arg[0])
+
 def stash_pullrequest_builder(parser, xml_parent, data):
     """yaml: stash-pullrequest-builder
     Build pull requests in stash and report results.
@@ -1597,34 +1624,6 @@ def stash_pullrequest_builder(parser, xml_parent, data):
     XML.SubElement(stprb, 'checkMergeable').text = data.get('check-mergeable')
     XML.SubElement(stprb, 'checkNotConflicted').text = data.get('check-not-conflicted')
     XML.SubElement(stprb, 'onlyBuildOnComment').text = data.get('only-build-on-comment')
-
-def rabbitmq(parser, xml_parent, data):
-    """yaml: rabbitmq
-    This plugin triggers build using remote build message in RabbitMQ queue.
-    Requires the Jenkins :jenkins-wiki:`RabbitMQ Build Trigger Plugin
-    <RabbitMQ+Build+Trigger+Plugin>`.
-
-    :arg str token: the build token expected in the message queue (required)
-
-    Example:
-
-    .. literalinclude:: /../../tests/triggers/fixtures/rabbitmq.yaml
-       :language: yaml
-    """
-
-    rabbitmq = XML.SubElement(
-        xml_parent,
-        'org.jenkinsci.plugins.rabbitmqbuildtrigger.'
-        'RemoteBuildTrigger')
-
-    XML.SubElement(rabbitmq, 'spec').text = ''
-
-    try:
-        XML.SubElement(rabbitmq, 'remoteBuildToken').text = str(
-            data.get('token'))
-    except KeyError as e:
-        raise MissingAttributeError(e.arg[0])
-
 
 class Triggers(jenkins_jobs.modules.base.Base):
     sequence = 50
