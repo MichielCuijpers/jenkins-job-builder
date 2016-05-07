@@ -58,6 +58,7 @@ Job with inline script example:
 import logging
 import xml.etree.ElementTree as XML
 import jenkins_jobs.modules.base
+import uuid
 
 logger = logging.getLogger(str(__name__))
 
@@ -96,7 +97,7 @@ class PipelineMultiBranch(jenkins_jobs.modules.base.Base):
         allView = XML.SubElement(views, 'hudson.model.AllView')
         owner = XML.SubElement(allView, 'owner')
         owner.attrib['class'] = 'org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject'
-        owner.attrib['reference'] = '../..'
+        owner.attrib['reference'] = '../../..'
         all_view_name = XML.SubElement(allView, 'name')
         all_view_name.text = 'All'
         all_view_filter_executors = XML.SubElement(allView, 'filterExecutors')
@@ -151,7 +152,8 @@ class PipelineMultiBranch(jenkins_jobs.modules.base.Base):
                 source = XML.SubElement(branch_source, 'source')
                 source.attrib['class'] = 'jenkins.plugins.git.GitSCMSource'
                 source.attrib['plugin'] = 'git'
-                # What to do with this? XML.SubElement(source, 'id').text = '3c759f39-3118-4bb2-bbf9-e997028ae98f'
+                uu_id = uuid.uuid4()
+                XML.SubElement(source, 'id').text = str(uu_id)
                 XML.SubElement(source, 'remote').text = git['url']
                 XML.SubElement(source, 'credentialsId').text = git['credentials-id']
                 XML.SubElement(source, 'includes').text = git.get('includes', '*')
