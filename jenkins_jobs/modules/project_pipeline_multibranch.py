@@ -52,7 +52,7 @@ python str.format() command.
 Job with inline script example:
 
     .. literalinclude::
-      /../../tests/yamlparser/fixtures/project_workflow_multibranch_template001.yaml
+      /../../tests/yamlparser/fixtures/project_pipeline_multibranch_template001.yaml
 
 """
 import logging
@@ -62,7 +62,7 @@ import jenkins_jobs.modules.base
 logger = logging.getLogger(str(__name__))
 
 
-class WorkflowMultiBranch(jenkins_jobs.modules.base.Base):
+class PipelineMultiBranch(jenkins_jobs.modules.base.Base):
     sequence = 0
 
     def root_xml(self, data):
@@ -77,15 +77,45 @@ class WorkflowMultiBranch(jenkins_jobs.modules.base.Base):
         properties = XML.SubElement(xml_parent, 'properties')
         folder_credentials_provider = XML.SubElement(properties, 'com.cloudbees.hudson.plugins.folder.properties.FolderCredentialsProvider_-FolderCredentialsProperty')
         folder_credentials_provider.attrib['plugin'] = 'cloudbees-folder'
-        entry = XML.SubElement(folder_credentials_provider, 'entry')
+        domain_credentials_map =  XML.SubElement(folder_credentials_provider, 'domainCredentialsMap')
+        domain_credentials_map.attrib['class'] = 'hudson.util.CopyOnWriteMap$Hash'
+        entry = XML.SubElement(domain_credentials_map, 'entry')
         domain = XML.SubElement(entry, 'com.cloudbees.plugins.credentials.domains.Domain')
+        domain.attrib['plugin'] = 'credentials'
         XML.SubElement(domain, 'specifications')
+        XML.SubElement(entry, 'java.util.concurrent.CopyOnWriteArrayList')
 
         if 'env-properties' in data['multibranch']:
             env_properties_parent = XML.SubElement(properties, 'com.cloudbees.hudson.plugins.folder.properties.EnvVarsFolderProperty')
             env_properties_parent.attrib['plugin'] = 'cloudbees-folders-plus'
             env_properties = XML.SubElement(env_properties_parent, 'properties')
             env_properties.text = project_def['env-properties']
+
+
+        views = XML.SubElement(xml_parent, 'views')
+        allView = XML.SubElement(views, 'hudson.model.AllView')
+        owner = XML.SubElement(allView, 'owner')
+        owner.attrib['class'] = 'org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject'
+        owner.attrib['reference'] = '../..'
+        all_view_name = XML.SubElement(allView, 'name')
+        all_view_name.text = 'All'
+        all_view_filter_executors = XML.SubElement(allView, 'filterExecutors')
+        all_view_filter_executors.text = 'false'
+        all_view_filter_queue = XML.SubElement(allView, 'filterQueue')
+        all_view_filter_queue.text = 'false'
+        all_view_properties = XML.SubElement(allView, 'properties')
+        all_view_properties.attrib['class'] = 'hudson.model.View$PropertyList'
+
+        views_tab_bar = XML.SubElement(xml_parent, 'viewsTabBar')
+        views_tab_bar.attrib['class'] = 'hudson.views.DefaultViewsTabBar'
+
+        health_metrics = XML.SubElement(xml_parent, 'healthMetrics')
+        health_metrics_plugin = XML.SubElement(health_metrics, 'com.cloudbees.hudson.plugins.folder.health.WorstChildHealthMetric')
+        health_metrics_plugin.attrib['plugin'] = 'cloudbees-folder'
+
+        icon = XML.SubElement(xml_parent, 'icon')
+        icon.attrib['class'] = 'com.cloudbees.hudson.plugins.folder.icons.StockFolderIcon'
+        icon.attrib['plugin'] = 'cloudbees-folder'
 
         orphaned_item_strategy = XML.SubElement(xml_parent, 'orphanedItemStrategy')
         orphaned_item_strategy.attrib['class'] = 'com.cloudbees.hudson.plugins.folder.computed.DefaultOrphanedItemStrategy'
@@ -133,8 +163,9 @@ class WorkflowMultiBranch(jenkins_jobs.modules.base.Base):
                 ignore_on_push = git.get('ignore-on-push-notifications', True)
                 XML.SubElement(source, 'ignoreOnPushNotifications').text = str(ignore_on_push).lower()
 
-        strategy = XML.SubElement(branch_source, 'strategy')
-        strategy.attrib['class'] = 'jenkins.branch.DefaultBranchPropertyStrategy'
+        owner = XML.SubElement(sources, 'owner')
+        owner.attrib['class'] = 'org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject'
+        owner.attrib['reference'] = '../..'
 
         if 'publisher-white-list' in project_def:
             whitelist_properties = XML.SubElement(strategy, 'properties')
@@ -149,8 +180,9 @@ class WorkflowMultiBranch(jenkins_jobs.modules.base.Base):
                 XML.SubElement(whitelist, 'string').text = publisher
 
         factory = XML.SubElement(xml_parent, 'factory')
-        factory_owner = XML.SubElement(factory, 'strategy')
+        factory.attrib['class'] = 'org.jenkinsci.plugins.workflow.multibranch.WorkflowBranchProjectFactory'
+        factory_owner = XML.SubElement(factory, 'owner')
         factory_owner.attrib['class'] = 'org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject'
-        factory_owner.attrib['reference'] = "../.."
+        factory_owner.attrib['reference'] = '../..'
 
         return xml_parent
