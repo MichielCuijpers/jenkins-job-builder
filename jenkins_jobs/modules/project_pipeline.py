@@ -82,8 +82,7 @@ class Pipeline(jenkins_jobs.modules.base.Base):
         xml_parent = XML.Element('flow-definition')
         xml_parent.attrib['plugin'] = 'workflow-job'
         definition = XML.SubElement(xml_parent, 'definition')
-        definition.attrib['class'] =
-        'org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition'
+        definition.attrib['class'] = 'org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition'
         definition.attrib['plugin'] = 'workflow-cps'
 
         if 'pipeline' not in data:
@@ -97,8 +96,7 @@ class Pipeline(jenkins_jobs.modules.base.Base):
 
         if 'scm' in pipeline and 'git' in pipeline['scm']:
             git(self, definition, pipeline['scm']['git'])
-            definition.attrib['class'] =
-            'org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition'
+            definition.attrib['class'] = 'org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition'
 
         if 'script' in pipeline:
             XML.SubElement(definition, 'script').text = pipeline.get(
