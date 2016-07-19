@@ -32,9 +32,10 @@ doubling them in the script: { -> {{ , otherwise it will be interpreted by the
 python str.format() command.
 
 :Job Parameters:
+    * **pipeline** (`str`): Use as root parameter.
     * **script** (`str`): The DSL content.
     * **sandbox** (`bool`): If the script should run in a sandbox (default
-      false)
+      true)
     * **script-path** (`str`): The name and location of the DSL file to
       execute as workflow.
 
@@ -81,7 +82,8 @@ class Pipeline(jenkins_jobs.modules.base.Base):
         xml_parent = XML.Element('flow-definition')
         xml_parent.attrib['plugin'] = 'workflow-job'
         definition = XML.SubElement(xml_parent, 'definition')
-        definition.attrib['class'] = 'org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition'
+        definition.attrib['class'] =
+        'org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition'
         definition.attrib['plugin'] = 'workflow-cps'
 
         if 'pipeline' not in data:
@@ -95,7 +97,8 @@ class Pipeline(jenkins_jobs.modules.base.Base):
 
         if 'scm' in pipeline and 'git' in pipeline['scm']:
             git(self, definition, pipeline['scm']['git'])
-            definition.attrib['class'] = 'org.jenkinsci.plugins.workflow'.cps.CpsScmFlowDefinition'
+            definition.attrib['class'] =
+            'org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition'
 
         if 'script' in pipeline:
             XML.SubElement(definition, 'script').text = pipeline.get(
