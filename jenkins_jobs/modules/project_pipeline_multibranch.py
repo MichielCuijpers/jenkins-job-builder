@@ -28,25 +28,33 @@ doubling them in the script: { -> {{ , otherwise it will be interpreted by the
 python str.format() command.
 
 :Job Parameters:
-    * **timer-trigger** (`str`): The timer spec for when the jobs should be triggered.
-    * **env-properties** (`str`): Environment variables. (optional)
-    * **periodic-folder-spec** (`str`): The timer spec for when the repository should be checked for branches.
-    * **periodic-folder-interval** (`str`): Interval for when the folder should be checked.
-        Not sure yet how the two related.
-    * **prune-dead-branches** (`str`): If dead branches upon check should result in their job being dropped.
-        (defaults to true) (optional)
-    * **number-to-keep** (`str`): How many builds should be kept. (defaults to -1, all) (optional)
-    * **days-to-keep** (`str`): For how many days should a build be kept. (defaults to -1, forever) (optional)
-    * **scm** (`str`): The SCM definition.
-    * **git** (`str`): Currently only GIT as SCM is supported, use this as sub-structure of scm.
-    * **url** (`str`): The GIT URL.
-    * **credentials-id** (`str`): The credentialsId to use to connect to the GIT URL.
-    * **includes** (`str`): Which branches should be included. (defaults to *, all)  (optional)
-    * **excludes** (`str`): Which branches should be excluded. (defaults to empty, none)  (optional)
-    * **ignore-on-push-notifications** (`bool`): If a job should not trigger upon push notifications.
-        (defaults to false) (optional)
-    * **publisher-white-list** (`str`): A list of which publisher plugins should be whitelisted.
-        (fully qualified name) (optional)
+  * **timer-trigger** (`str`): The timer spec for when the jobs
+   should be triggered.
+  * **env-properties** (`str`): Environment variables. (optional)
+  * **periodic-folder-spec** (`str`): The timer spec for when
+   repository should be checked for branches.
+  * **periodic-folder-interval** (`str`): Interval for when the folder
+   should be checked.
+  * **prune-dead-branches** (`str`): If dead branches upon check
+   should result in their job being dropped. (defaults to true) (optional)
+  * **number-to-keep** (`str`): How many builds should be kept.
+   (defaults to -1, all) (optional)
+  * **days-to-keep** (`str`): For how many days should a build be kept.
+   (defaults to -1, forever) (optional)
+  * **scm** (`str`): The SCM definition.
+  * **git** (`str`): Currently only GIT as SCM is supported,
+   use this as sub-structure of scm.
+  * **url** (`str`): The GIT URL.
+  * **credentials-id** (`str`): The credentialsId to use to connect to the GIT
+   repository URL.
+  * **includes** (`str`): Which branches should be included.
+    (defaults to *, all)  (optional)
+  * **excludes** (`str`): Which branches should be excluded.
+    (defaults to empty, none)  (optional)
+  * **ignore-on-push-notifications** (`bool`): If a job should not trigger upon
+    push notifications. (defaults to false) (optional)
+  * **publisher-white-list** (`str`): A list of which publisher plugins
+    should be whitelisted. (fully qualified name) (optional)
 
 
 Job with inline script example:
@@ -56,17 +64,24 @@ Job with inline script example:
 
 """
 import logging
+import uuid
 import xml.etree.ElementTree as XML
 import jenkins_jobs.modules.base
-import uuid
+from scm import git
 
 logger = logging.getLogger(str(__name__))
 
 
 class PipelineMultiBranch(jenkins_jobs.modules.base.Base):
+    """
+        Project type for the Jenkins Multi-Branch Pipeline plugin.
+    """
     sequence = 0
 
     def root_xml(self, data):
+        """
+            Builds up the Jenkins config.xml for this project type.
+        """
         xml_parent = XML.Element('org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject')
         xml_parent.attrib['plugin'] = 'workflow-multibranch'
 
@@ -76,22 +91,24 @@ class PipelineMultiBranch(jenkins_jobs.modules.base.Base):
         project_def = data['multibranch']
 
         properties = XML.SubElement(xml_parent, 'properties')
-        folder_credentials_provider = XML.SubElement(properties, 'com.cloudbees.hudson.plugins.folder.properties.FolderCredentialsProvider_-FolderCredentialsProperty')
+        folder_credentials_provider = XML.SubElement(properties,
+                                                     'com.cloudbees.hudson.plugins.folder.properties.FolderCredentialsProvider_-FolderCredentialsProperty')
         folder_credentials_provider.attrib['plugin'] = 'cloudbees-folder'
-        domain_credentials_map =  XML.SubElement(folder_credentials_provider, 'domainCredentialsMap')
+        domain_credentials_map = XML.SubElement(folder_credentials_provider, 'domainCredentialsMap')
         domain_credentials_map.attrib['class'] = 'hudson.util.CopyOnWriteMap$Hash'
         entry = XML.SubElement(domain_credentials_map, 'entry')
-        domain = XML.SubElement(entry, 'com.cloudbees.plugins.credentials.domains.Domain')
+        domain = XML.SubElement(entry,
+                                'com.cloudbees.plugins.credentials.domains.Domain')
         domain.attrib['plugin'] = 'credentials'
         XML.SubElement(domain, 'specifications')
         XML.SubElement(entry, 'java.util.concurrent.CopyOnWriteArrayList')
 
         if 'env-properties' in data['multibranch']:
-            env_properties_parent = XML.SubElement(properties, 'com.cloudbees.hudson.plugins.folder.properties.EnvVarsFolderProperty')
+            env_properties_parent = XML.SubElement(properties,
+                                                   'com.cloudbees.hudson.plugins.folder.properties.EnvVarsFolderProperty')
             env_properties_parent.attrib['plugin'] = 'cloudbees-folders-plus'
             env_properties = XML.SubElement(env_properties_parent, 'properties')
             env_properties.text = project_def['env-properties']
-
 
         views = XML.SubElement(xml_parent, 'views')
         allView = XML.SubElement(views, 'hudson.model.AllView')
@@ -111,7 +128,8 @@ class PipelineMultiBranch(jenkins_jobs.modules.base.Base):
         views_tab_bar.attrib['class'] = 'hudson.views.DefaultViewsTabBar'
 
         health_metrics = XML.SubElement(xml_parent, 'healthMetrics')
-        health_metrics_plugin = XML.SubElement(health_metrics, 'com.cloudbees.hudson.plugins.folder.health.WorstChildHealthMetric')
+        health_metrics_plugin = XML.SubElement(health_metrics,
+                                               'com.cloudbees.hudson.plugins.folder.health.WorstChildHealthMetric')
         health_metrics_plugin.attrib['plugin'] = 'cloudbees-folder'
 
         icon = XML.SubElement(xml_parent, 'icon')
@@ -124,7 +142,8 @@ class PipelineMultiBranch(jenkins_jobs.modules.base.Base):
 
         if 'prune-dead-branches' in data['multibranch']:
             prune_dead_branches = data['multibranch'].get('prune-dead-branches', False)
-            XML.SubElement(orphaned_item_strategy, 'pruneDeadBranches').text = str(prune_dead_branches).lower()
+            XML.SubElement(orphaned_item_strategy,
+                           'pruneDeadBranches').text = str(prune_dead_branches).lower()
 
         XML.SubElement(orphaned_item_strategy, 'daysToKeep').text = project_def.get('days-to-keep', '-1')
         XML.SubElement(orphaned_item_strategy, 'numToKeep').text = project_def.get('number-to-keep', '-1')
@@ -143,27 +162,21 @@ class PipelineMultiBranch(jenkins_jobs.modules.base.Base):
         sources.attrib['class'] = 'jenkins.branch.MultiBranchProject$BranchSourceList'
         sources.attrib['plugin'] = 'branch-api'
         sources_data = XML.SubElement(sources, 'data')
-        branch_source = XML.SubElement(sources_data, 'jenkins.branch.BranchSource')
+        # TODO add multiple sources from scm
+        # For each git repo, there should be a BranchSource
 
         if 'scm' in project_def:
-            scm = project_def['scm']
-            if 'git' in scm:
-                git = scm['git']
-                source = XML.SubElement(branch_source, 'source')
-                source.attrib['class'] = 'jenkins.plugins.git.GitSCMSource'
-                source.attrib['plugin'] = 'git'
-                uu_id = uuid.uuid4()
-                XML.SubElement(source, 'id').text = str(uu_id)
-                XML.SubElement(source, 'remote').text = git['url']
-                XML.SubElement(source, 'credentialsId').text = git['credentials-id']
-                XML.SubElement(source, 'includes').text = git.get('includes', '*')
-                if 'excludes' in git:
-                    XML.SubElement(source, 'excludes').text = git['excludes']
+            for git_data in project_def['scm']:
+                logger.warn('git_data = %s' % git_data)
+                if isinstance(git_data, dict) and 'git' in git_data:
+                    branch_source = XML.SubElement(
+                        sources_data, 'jenkins.branch.BranchSource')
+                    self.generate_git_scm_xml(branch_source, git_data['git'])
+                    self.generate_source_strategy(branch_source,
+                                                  git_data['git'])
                 else:
-                    XML.SubElement(source, 'excludes')
-
-                ignore_on_push = git.get('ignore-on-push-notifications', True)
-                XML.SubElement(source, 'ignoreOnPushNotifications').text = str(ignore_on_push).lower()
+                    logger.warn('We cannot process scm of type %s'
+                                % git_data_name)
 
         owner = XML.SubElement(sources, 'owner')
         owner.attrib['class'] = 'org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject'
@@ -188,3 +201,78 @@ class PipelineMultiBranch(jenkins_jobs.modules.base.Base):
         factory_owner.attrib['reference'] = '../..'
 
         return xml_parent
+
+    def generate_git_scm_xml(self, xml_parent, data):
+        git_source = XML.SubElement(xml_parent, 'source')
+        git_source.attrib['class'] = 'jenkins.plugins.git.GitSCMSource'
+        git_source.attrib['plugin'] = 'git'
+
+        ignore_on_push = data.get('ignore-on-push-notifications', True)
+
+        git_element_list = []
+        git_element_list.append(['id', str(uuid.uuid4())])
+        git_element_list.append(['remote', data['url']])
+        git_element_list.append(['credentialsId', data['credentials-id']])
+        git_element_list.append(['ignoreOnPushNotifications', str(ignore_on_push).lower()])
+        git_element_list.append(['includes', data.get('includes', '*')])
+
+        if 'excludes' in data:
+            git_element_list.append(['excludes', data['excludes']])
+        else:
+            XML.SubElement(git_source, 'excludes')
+
+        for item in git_element_list:
+            XML.SubElement(git_source, item[0]).text = item[1]
+
+        # add extensions
+        temp_xml = XML.SubElement(git_source, 'temp-git')
+        git(self, temp_xml, data)
+        temp_xml_scm = temp_xml.find('scm')
+        if temp_xml_scm and temp_xml_scm.find('extensions'):
+            temp_extensions = temp_xml_scm.find('extensions')
+            git_source.append(temp_extensions)
+        git_source.remove(temp_xml)
+
+    def generate_source_strategy(self, xml_parent, data):
+
+        """
+        <strategy class="jenkins.branch.DefaultBranchPropertyStrategy">
+            <properties class="java.util.Arrays$ArrayList">
+                <a class="jenkins.branch.BranchProperty-array">
+                    <jenkins.branch.NoTriggerBranchProperty/>
+                </a>
+            </properties>
+        </strategy>
+        """
+
+
+
+        """
+        <strategy class="jenkins.branch.NamedExceptionsBranchPropertyStrategy">
+            <defaultProperties class="java.util.Arrays$ArrayList">
+                <a class="jenkins.branch.BranchProperty-array">
+                    <jenkins.branch.NoTriggerBranchProperty/>
+                </a>
+            </defaultProperties>
+            <namedExceptions class="java.util.Arrays$ArrayList">
+                <a class="jenkins.branch.NamedExceptionsBranchPropertyStrategy$Named-array">
+                    <jenkins.branch.NamedExceptionsBranchPropertyStrategy_-Named>
+                        <props class="java.util.Arrays$ArrayList">
+                            <a class="jenkins.branch.BranchProperty-array">
+                                <jenkins.branch.NoTriggerBranchProperty/>
+                            </a>
+                        </props>
+                        <name>abc</name>
+                    </jenkins.branch.NamedExceptionsBranchPropertyStrategy_-Named>
+                    <jenkins.branch.NamedExceptionsBranchPropertyStrategy_-Named>
+                        <props class="java.util.Arrays$ArrayList">
+                            <a class="jenkins.branch.BranchProperty-array">
+                                <jenkins.branch.NoTriggerBranchProperty/>
+                            </a>
+                        </props>
+                        <name>xyz</name>
+                    </jenkins.branch.NamedExceptionsBranchPropertyStrategy_-Named>
+                </a>
+            </namedExceptions>
+        </strategy>
+        """
