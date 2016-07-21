@@ -78,7 +78,7 @@ class PipelineMultiBranch(jenkins_jobs.modules.base.Base):
         properties = XML.SubElement(xml_parent, 'properties')
         folder_credentials_provider = XML.SubElement(properties, 'com.cloudbees.hudson.plugins.folder.properties.FolderCredentialsProvider_-FolderCredentialsProperty')
         folder_credentials_provider.attrib['plugin'] = 'cloudbees-folder'
-        domain_credentials_map =  XML.SubElement(folder_credentials_provider, 'domainCredentialsMap')
+        domain_credentials_map = XML.SubElement(folder_credentials_provider, 'domainCredentialsMap')
         domain_credentials_map.attrib['class'] = 'hudson.util.CopyOnWriteMap$Hash'
         entry = XML.SubElement(domain_credentials_map, 'entry')
         domain = XML.SubElement(entry, 'com.cloudbees.plugins.credentials.domains.Domain')
@@ -91,7 +91,6 @@ class PipelineMultiBranch(jenkins_jobs.modules.base.Base):
             env_properties_parent.attrib['plugin'] = 'cloudbees-folders-plus'
             env_properties = XML.SubElement(env_properties_parent, 'properties')
             env_properties.text = project_def['env-properties']
-
 
         views = XML.SubElement(xml_parent, 'views')
         allView = XML.SubElement(views, 'hudson.model.AllView')

@@ -17,6 +17,8 @@
 
 import codecs
 import locale
+import os
+import errno
 
 
 def wrap_stream(stream, encoding='utf-8'):
@@ -33,3 +35,14 @@ def wrap_stream(stream, encoding='utf-8'):
         return stream
 
     return codecs.EncodedFile(stream, encoding, stream_enc)
+
+
+def create_directory(full_path):
+    """Test for the path, and create it if it doesn't exist"""
+    # Add the directory if it does not already exists
+    if not os.path.exists(os.path.dirname(full_path)):
+        try:
+            os.makedirs(os.path.dirname(full_path))
+        except OSError as exc:  # Guard against race condition
+            if exc.errno != errno.EEXIST:
+                raise
