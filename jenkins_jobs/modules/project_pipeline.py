@@ -32,12 +32,12 @@ doubling them in the script: { -> {{ , otherwise it will be interpreted by the
 python str.format() command.
 
 :Job Parameters:
+    * **pipeline** (`str`): Use as root parameter.
     * **script** (`str`): The DSL content.
     * **sandbox** (`bool`): If the script should run in a sandbox (default
-      false)
+      true)
     * **script-path** (`str`): The name and location of the DSL file to
       execute as workflow.
-
 
 
 Job with inline script example:
@@ -63,19 +63,31 @@ from jenkins_jobs.errors import (JenkinsJobsException)
 import jenkins_jobs.modules.base
 import jenkins_jobs.modules.parameters
 
+from scm import git
+
 
 class Pipeline(jenkins_jobs.modules.base.Base):
+    """
+        Project type for the Jenkins Pipeline plugin.
+    """
+
     sequence = 0
 
     def root_xml(self, data):
+        """
+            Defines the xml for the project.
+        """
+        logger = logging.getLogger("%s:pipeline" % __name__)
+
         xml_parent = XML.Element('flow-definition')
         xml_parent.attrib['plugin'] = 'workflow-job'
-
         definition = XML.SubElement(xml_parent, 'definition')
-        definition.attrib['class'] = 'org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition'
+        definition.attrib['class'] =
+        'org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition'
         definition.attrib['plugin'] = 'workflow-cps'
 
         if 'pipeline' not in data:
+            logger.warn('No pipeline information')
             return xml_parent
 
         pipeline = data['pipeline']
@@ -84,95 +96,19 @@ class Pipeline(jenkins_jobs.modules.base.Base):
             Parameters.gen_xml(self, definition, data)
 
         if 'scm' in pipeline and 'git' in pipeline['scm']:
-            self.git(definition, pipeline['scm']['git'])
-            definition.attrib['class'] = 'org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition'
+            git(self, definition, pipeline['scm']['git'])
+            definition.attrib['class'] =
+            'org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition'
 
         if 'script' in pipeline:
-            XML.SubElement(definition, 'script').text = pipeline.get('script', '')
+            XML.SubElement(definition, 'script').text = pipeline.get(
+                'script', '')
             needs_workspace = pipeline.get('sandbox', True)
-            XML.SubElement(definition, 'sandbox').text = str(needs_workspace).lower()
+            XML.SubElement(definition, 'sandbox').text = str(
+                needs_workspace).lower()
 
         if 'script-path' in pipeline:
-            XML.SubElement(definition, 'scriptPath').text = pipeline.get('script-path', '')
+            XML.SubElement(definition, 'scriptPath').text = pipeline.get(
+                'script-path', '')
 
         return xml_parent
-
-    def git(self, xml_parent, data):
-        logger = logging.getLogger("%s:pipeline-git" % __name__)
-        scm = XML.SubElement(xml_parent,
-                             'scm', {'class': 'hudson.plugins.git.GitSCM'})
-        scm.attrib['plugin'] = 'git'
-        XML.SubElement(scm, 'configVersion').text = '2'
-
-        user = XML.SubElement(scm, 'userRemoteConfigs')
-
-        if 'remotes' not in data:
-            data['remotes'] = [{data.get('name', 'origin'): data.copy()}]
-
-        for remoteData in data['remotes']:
-            huser = XML.SubElement(user, 'hudson.plugins.git.UserRemoteConfig')
-            remoteName = next(iter(remoteData.keys()))
-            #XML.SubElement(huser, 'name').text = remoteName
-            remoteParams = next(iter(remoteData.values()))
-
-            if 'url' in remoteParams:
-                remoteURL = remoteParams['url']
-            else:
-                raise JenkinsJobsException('Must specify a url for git remote \"' +
-                                           remoteName + '"')
-            XML.SubElement(huser, 'url').text = remoteURL
-            if 'credentials-id' in remoteParams:
-                credentialsId = remoteParams['credentials-id']
-                XML.SubElement(huser, 'credentialsId').text = credentialsId
-
-        xml_branches = XML.SubElement(scm, 'branches')
-        branches = data.get('branches', ['**'])
-
-        for branch in branches:
-            bspec = XML.SubElement(xml_branches, 'hudson.plugins.git.BranchSpec')
-            XML.SubElement(bspec, 'name').text = branch
-
-        # add addition elements
-        #<doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
-        #<submoduleCfg class="list"/>
-
-        mappingOld = [
-        # option, xml name, default value (text), attributes (hard coded)
-            (None, 'doGenerateSubmoduleConfigurations', False),
-            (None, 'submoduleCfg', '', {'class': 'list'}),
-        ]
-
-        mapping = [
-            # option, xml name, default value (text), attributes (hard coded)
-            ("ignore-notify", "ignoreNotifyCommit", False),
-            ("shallow-clone", "useShallowClone", False),
-        ]
-
-        # first adding the deprecated options
-        for elem in mappingOld:
-            (optname, xmlname, val) = elem[:3]
-            attrs = {}
-            attrs = {}
-            if len(elem) >= 4:
-                attrs = elem[3]
-            xe = XML.SubElement(scm, xmlname, attrs)
-            if optname and optname in data:
-                val = data[optname]
-            if type(val) == bool:
-                xe.text = str(val).lower()
-            else:
-                xe.text = val
-
-        exts_node = XML.SubElement(scm, 'extensions')
-        for elem in mapping:
-            (optname, xmlname, val) = elem[:3]
-            attrs = {}
-            if len(elem) >= 4:
-                attrs = elem[3]
-            xe = XML.SubElement(exts_node, xmlname, attrs)
-            if optname and optname in data:
-                val = data[optname]
-            if type(val) == bool:
-                xe.text = str(val).lower()
-            else:
-                xe.text = val
