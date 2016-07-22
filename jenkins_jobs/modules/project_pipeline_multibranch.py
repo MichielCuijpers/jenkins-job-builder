@@ -172,8 +172,11 @@ class PipelineMultiBranch(jenkins_jobs.modules.base.Base):
                     branch_source = XML.SubElement(
                         sources_data, 'jenkins.branch.BranchSource')
                     self.generate_git_scm_xml(branch_source, git_data['git'])
-                    self.generate_source_strategy(branch_source,
-                                                  git_data['git'])
+
+                    if 'strategy' in git_data['git']:
+                        self.generate_source_strategy(branch_source, git_data['git']['strategy'])
+                    else:
+                        self.generate_default_source_strategy(branch_source)
                 else:
                     logger.warn('We cannot process scm of type %s'
                                 % git_data_name)
@@ -203,6 +206,8 @@ class PipelineMultiBranch(jenkins_jobs.modules.base.Base):
         return xml_parent
 
     def generate_git_scm_xml(self, xml_parent, data):
+        """
+        """
         git_source = XML.SubElement(xml_parent, 'source')
         git_source.attrib['class'] = 'jenkins.plugins.git.GitSCMSource'
         git_source.attrib['plugin'] = 'git'
@@ -233,46 +238,50 @@ class PipelineMultiBranch(jenkins_jobs.modules.base.Base):
             git_source.append(temp_extensions)
         git_source.remove(temp_xml)
 
+    def generate_default_source_strategy(self, xml_parent):
+        """
+        """
+        strategy = XML.SubElement(xml_parent, 'strategy')
+        strategy.attrib['class'] = 'jenkins.branch.DefaultBranchPropertyStrategy'
+        strategy_properties = XML.SubElement(strategy, 'properties')
+        strategy_properties.attrib['class'] = 'empty-list'
+
     def generate_source_strategy(self, xml_parent, data):
-
         """
-        <strategy class="jenkins.branch.DefaultBranchPropertyStrategy">
-            <properties class="java.util.Arrays$ArrayList">
-                <a class="jenkins.branch.BranchProperty-array">
-                    <jenkins.branch.NoTriggerBranchProperty/>
-                </a>
-            </properties>
-        </strategy>
         """
+        if 'exceptions' in data:
+            logger.warn('contains git strategy exceptions')
+            strategy = XML.SubElement(xml_parent, 'strategy')
+            strategy.attrib['class'] = 'jenkins.branch.NamedExceptionsBranchPropertyStrategy'
 
+            # defaultPropeties section
+            strategy_properties = XML.SubElement(strategy, 'defaultProperties')
+            strategy_properties.attrib['class'] = 'java.util.Arrays$ArrayList'
+            prop_a = XML.SubElement(strategy_properties, 'a')
+            prop_a.attrib['class'] = 'jenkins.branch.BranchProperty-array'
+            XML.SubElement(prop_a, 'jenkins.branch.NoTriggerBranchProperty')
 
+            named_exceptions = XML.SubElement(strategy, 'namedExceptions')
+            named_exceptions.attrib['class'] = 'java.util.Arrays$ArrayList'
+            named_exceptions_a = XML.SubElement(named_exceptions, 'a')
+            named_exceptions_a.attrib['class'] = 'jenkins.branch.NamedExceptionsBranchPropertyStrategy$Named-array'
 
-        """
-        <strategy class="jenkins.branch.NamedExceptionsBranchPropertyStrategy">
-            <defaultProperties class="java.util.Arrays$ArrayList">
-                <a class="jenkins.branch.BranchProperty-array">
-                    <jenkins.branch.NoTriggerBranchProperty/>
-                </a>
-            </defaultProperties>
-            <namedExceptions class="java.util.Arrays$ArrayList">
-                <a class="jenkins.branch.NamedExceptionsBranchPropertyStrategy$Named-array">
-                    <jenkins.branch.NamedExceptionsBranchPropertyStrategy_-Named>
-                        <props class="java.util.Arrays$ArrayList">
-                            <a class="jenkins.branch.BranchProperty-array">
-                                <jenkins.branch.NoTriggerBranchProperty/>
-                            </a>
-                        </props>
-                        <name>abc</name>
-                    </jenkins.branch.NamedExceptionsBranchPropertyStrategy_-Named>
-                    <jenkins.branch.NamedExceptionsBranchPropertyStrategy_-Named>
-                        <props class="java.util.Arrays$ArrayList">
-                            <a class="jenkins.branch.BranchProperty-array">
-                                <jenkins.branch.NoTriggerBranchProperty/>
-                            </a>
-                        </props>
-                        <name>xyz</name>
-                    </jenkins.branch.NamedExceptionsBranchPropertyStrategy_-Named>
-                </a>
-            </namedExceptions>
-        </strategy>
-        """
+            for exception in data['exceptions']:
+                logger.warn('Exception found for branch %s' % exception)
+                named_exception = XML.SubElement(named_exceptions_a, 'jenkins.branch.NamedExceptionsBranchPropertyStrategy_-Named')
+                named_exception_props = XML.SubElement(named_exception, 'props')
+                named_exception_props.attrib['class'] = 'java.util.Arrays$ArrayList'
+                named_exception_props_a = XML.SubElement(named_exception_props, 'a')
+                named_exception_props_a.attrib['class'] = 'jenkins.branch.BranchProperty-array'
+                XML.SubElement(named_exception_props_a, 'jenkins.branch.NoTriggerBranchProperty')
+                exception_branch_name = XML.SubElement(named_exception, 'name')
+                exception_branch_name.text = exception
+        else:
+            logger.warn('contains simple git strategy')
+            strategy = XML.SubElement(xml_parent, 'strategy')
+            strategy.attrib['class'] = 'jenkins.branch.DefaultBranchPropertyStrategy'
+            strategy_properties = XML.SubElement(strategy, 'properties')
+            strategy_properties.attrib['class'] = 'java.util.Arrays$ArrayList'
+            prop_a = XML.SubElement(strategy_properties, 'a')
+            prop_a.attrib['class'] = 'jenkins.branch.BranchProperty-array'
+            XML.SubElement(prop_a, 'jenkins.branch.NoTriggerBranchProperty')
