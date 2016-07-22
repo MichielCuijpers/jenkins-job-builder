@@ -360,6 +360,7 @@ class Builder(object):
                     logger.info("Job name:  %s", job.name)
                     logger.debug("Writing XML to '{0}'".format(output))
                     try:
+                        utils.create_directory(output)
                         output.write(job.output())
                     except IOError as exc:
                         if exc.errno == errno.EPIPE:
@@ -371,6 +372,8 @@ class Builder(object):
                     continue
 
                 output_fn = os.path.join(output, job.name)
+                utils.create_directory(output_fn)
+
                 logger.debug("Writing XML to '{0}'".format(output_fn))
                 with io.open(output_fn, 'w', encoding='utf-8') as f:
                     f.write(job.output().decode('utf-8'))
