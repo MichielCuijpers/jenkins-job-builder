@@ -185,18 +185,6 @@ class PipelineMultiBranch(jenkins_jobs.modules.base.Base):
         owner.attrib['class'] = 'org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject'
         owner.attrib['reference'] = '../..'
 
-        if 'publisher-white-list' in project_def:
-            whitelist_properties = XML.SubElement(strategy, 'properties')
-            whitelist_properties.attrib['class'] = 'java.util.Arrays$ArrayList'
-            whitelist_a = XML.SubElement(whitelist_properties, 'a')
-            whitelist_a.attrib['class'] = 'jenkins.branch.BranchProperty-array'
-            untrusted_branch_property = XML.SubElement(whitelist_a, 'jenkins.branch.UntrustedBranchProperty')
-            whitelist = XML.SubElement(untrusted_branch_property, 'publisherWhitelist')
-            whitelist.attrib['class'] = 'sorted-set'
-
-            for publisher in project_def['publisher-white-list']:
-                XML.SubElement(whitelist, 'string').text = publisher
-
         factory = XML.SubElement(xml_parent, 'factory')
         factory.attrib['class'] = 'org.jenkinsci.plugins.workflow.multibranch.WorkflowBranchProjectFactory'
         factory_owner = XML.SubElement(factory, 'owner')
