@@ -178,7 +178,7 @@ class PipelineMultiBranch(jenkins_jobs.modules.base.Base):
                     else:
                         self.generate_default_source_strategy(branch_source)
                 else:
-                    logger.warn('We cannot process scm of type')
+                    logger.warn('We cannot process scm')
 
         owner = XML.SubElement(sources, 'owner')
         owner.attrib['class'] = 'org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject'
