@@ -1,14 +1,15 @@
 - job-template:
     name: '{name}-unit-tests'
-    project-type: workflow
-    script: |
-        build job: "job1"
-        parallel [
-          2a: build job: "job2a",
-          2b: node "dummynode" {{
-            sh "echo {isay}"
-          }}
-        ]
+    project-type: pipeline
+    pipeline:
+        script: |
+            build job: "job1"
+            parallel [
+              2a: build job: "job2a",
+              2b: node "dummynode" {{
+                sh "echo {isay}"
+              }}
+            ]
 
 - job-group:
     name: '{name}-tests'

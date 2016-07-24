@@ -20,24 +20,37 @@
 
 """
 The workflow Project module handles creating Jenkins workflow projects.
-You may specify ``workflow`` in the ``project-type`` attribute of
+You may specify ``pipeline`` in the ``project-type`` attribute of
 the :ref:`Job` definition.
 
 You can add an SCM with the script-path, but for now only GIT is supported.
 
-Requires the Jenkins :jenkins-wiki:`Workflow Plugin <Workflow+Plugin>`.
+Requires the Jenkins :jenkins-wiki:`Pipeline Plugin <Pipeline+Plugin>`.
 
 In order to use it for job-template you have to escape the curly braces by
 doubling them in the script: { -> {{ , otherwise it will be interpreted by the
 python str.format() command.
 
+You can also include the inline script via a file.
+With the include mechanism.
+e.g. !include-raw-escape: include/pipeline-inline-script.txt
+
+Either you use a inline script, or you use a scm with a script path.
+Currently only git is supported as SCM.
+See the git plugin in the scm section for how to use it.
+
+When using from scm, you are automatically in sandbox mode.
+So the sandbox param is only evaluated if you do an inline script.
+
 :Job Parameters:
-    * **pipeline** (`str`): Use as root parameter.
-    * **script** (`str`): The DSL content.
-    * **sandbox** (`bool`): If the script should run in a sandbox (default
-      true)
-    * **script-path** (`str`): The name and location of the DSL file to
-      execute as workflow.
+    :arg dict pipeline: second root level param
+        * **script** (`str`): The DSL content.
+        * **sandbox** (`bool`): If the script should run in a sandbox (default
+          true)
+        * **script-path** (`str`): The name and location of the DSL file to
+          execute as workflow.
+        * **scm** (`dict`): The SCM section
+        * **properties** (`dict`): the properties section, see Parameters
 
 
 Job with inline script example:
@@ -55,6 +68,11 @@ Job template example:
 
     .. literalinclude::
       /../../tests/yamlparser/fixtures/project_pipeline_template002.yaml
+
+Job template example:
+
+    .. literalinclude::
+      /../../tests/yamlparser/fixtures/project_pipeline_template003.yaml
 
 """
 import logging
@@ -82,7 +100,8 @@ class Pipeline(jenkins_jobs.modules.base.Base):
         xml_parent = XML.Element('flow-definition')
         xml_parent.attrib['plugin'] = 'workflow-job'
         definition = XML.SubElement(xml_parent, 'definition')
-        definition.attrib['class'] = 'org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition'
+        definition.attrib['class'] = 'org.jenkinsci.plugins.workflow.cps.\
+         CpsFlowDefinition'
         definition.attrib['plugin'] = 'workflow-cps'
 
         if 'pipeline' not in data:
@@ -96,7 +115,8 @@ class Pipeline(jenkins_jobs.modules.base.Base):
 
         if 'scm' in pipeline and 'git' in pipeline['scm']:
             git(self, definition, pipeline['scm']['git'])
-            definition.attrib['class'] = 'org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition'
+            definition.attrib['class'] = 'org.jenkinsci.plugins.workflow.cps. \
+             CpsScmFlowDefinition'
 
         if 'script' in pipeline:
             XML.SubElement(definition, 'script').text = pipeline.get(
