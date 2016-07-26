@@ -42,15 +42,14 @@ See the git plugin in the scm section for how to use it.
 When using from scm, you are automatically in sandbox mode.
 So the sandbox param is only evaluated if you do an inline script.
 
-:Job Parameters:
-    :arg dict pipeline: second root level param
-        * **script** (`str`): The DSL content.
-        * **sandbox** (`bool`): If the script should run in a sandbox (default
-          true)
-        * **script-path** (`str`): The name and location of the DSL file to
-          execute as workflow.
-        * **scm** (`dict`): The SCM section
-        * **properties** (`dict`): the properties section, see Parameters
+:arg dict pipeline:
+    * **script** (`str`): The DSL content.
+    * **sandbox** (`bool`): If the script should run in a sandbox (default
+      true)
+    * **script-path** (`str`): The name and location of the DSL file to
+      execute as workflow.
+    * **scm** (`dict`): The SCM section
+    * **properties** (`dict`): the properties section, see Parameters
 
 
 Job with inline script example:
