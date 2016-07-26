@@ -51,27 +51,13 @@ So the sandbox param is only evaluated if you do an inline script.
     * **scm** (`dict`): The SCM section
     * **properties** (`dict`): the properties section, see Parameters
 
-
 Job with inline script example:
-
     .. literalinclude::
-      /../../tests/yamlparser/fixtures/project_pipeline_template001.yaml
+        /../../tests/yamlparser/fixtures/project_pipeline_template001.yaml
 
 Job with external script example:
-
     .. literalinclude::
-      /../../tests/yamlparser/fixtures/project_pipeline_template004.yaml
-
-
-Job template example:
-
-    .. literalinclude::
-      /../../tests/yamlparser/fixtures/project_pipeline_template002.yaml
-
-Job template example:
-
-    .. literalinclude::
-      /../../tests/yamlparser/fixtures/project_pipeline_template003.yaml
+        /../../tests/yamlparser/fixtures/project_pipeline_template004.yaml
 
 """
 import logging
