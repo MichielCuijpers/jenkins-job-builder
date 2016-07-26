@@ -21,43 +21,21 @@
         number-to-keep: '10'
         days-to-keep: '10'
         scm:
-            git:
-                url: '{gitUrl}/{gitlab-user}/{workflowComponentId}.git'
-                credentials-id: '{gitCredentialsId}'
-        publisher-white-list:
-            - au.com.centrumsystems.hudson.plugin.buildpipeline.trigger.BuildPipelineTrigger
-            - com.cloudbees.jenkins.GitHubCommitNotifier
-            - com.cloudbees.opscenter.triggers.RemoteTriggerPublisher
-            - com.cloudbees.plugins.deployer.DeployPublisher
-            - com.michelin.cio.hudson.plugins.copytoslave.CopyToMasterNotifier
-            - com.sonatype.insight.ci.hudson.PostBuildScan
-            - com.urbancode.ds.jenkins.plugins.urbandeploypublisher.UrbanDeployPublisher
-            - hudson.maven.MavenTestDataPublisher
-            - hudson.maven.RedeployPublisher
-            - hudson.plugins.analysis.collector.AnalysisPublisher
-            - hudson.plugins.checkstyle.CheckStylePublisher
-            - hudson.plugins.descriptionsetter.DescriptionSetterPublisher
-            - hudson.plugins.findbugs.FindBugsPublisher
-            - hudson.plugins.git.GitPublisher
-            - hudson.plugins.jacoco.JacocoPublisher
-            - hudson.plugins.parameterizedtrigger.BuildTrigger
-            - hudson.plugins.pmd.PmdPublisher
-            - hudson.plugins.promoted_builds.KeepBuildForeverAction
-            - hudson.plugins.promoted_builds.tasks.RedeployBatchTaskPublisher
-            - hudson.plugins.sonar.SonarPublisher
-            - hudson.tasks.ArtifactArchiver
-            - hudson.tasks.BuildTrigger
-            - hudson.tasks.Fingerprinter
-            - hudson.tasks.JavadocArchiver
-            - hudson.tasks.Mailer
-            - hudson.tasks.junit.JUnitResultArchiver
-            - hudson.tasks.test.AggregatedTestResultPublisher
-            - jenkins.plugins.publish_over_cifs.CifsPromotionPublisherPlugin
-            - jenkins.plugins.publish_over_cifs.CifsPublisherPlugin
-            - org.jenkins_ci.plugins.flexible_publish.FlexiblePublisher
-            - org.jenkinsci.plugins.nexus.NexusTaskPublisher
-            - org.jenkinsci.plugins.stashNotifier.StashNotifier
-            - stashpullrequestbuilder.stashpullrequestbuilder.StashPostBuildComment
+            - git:
+                url: 'git@git.flusso.nl:example/example.git'
+                credentials-id: '4f0dfb96-a7b1-421c-a4ea-b6a154f91b08'
+            - git:
+                url: 'git@git.flusso.nl:example/example.git'
+                credentials-id: '4f0dfb96-a7b1-421c-a4ea-b6a154f91b08'
+                shallow-clone: true
+                strategy:
+            - git:
+                url: 'git@git.flusso.nl:example/example.git'
+                credentials-id: '4f0dfb96-a7b1-421c-a4ea-b6a154f91b08'
+                strategy:
+                    exceptions:
+                        - develop
+                        - master
         env-properties: |
             semVer=prerelease
             foo=bar
@@ -69,8 +47,7 @@
         - '{name}-{workflowComponentId}-demo-mb':
 
 - project:
-    name: rnd
-    gitlab-user: jvandergriendt
+    name: example
     jobs:
         - '{name}-workflow':
             workflowComponentId: keep-frontend

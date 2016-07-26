@@ -15,49 +15,112 @@
 
 
 """
-The workflow Project module handles creating Jenkins workflow projects.
-You may specify ``workflow`` in the ``project-type`` attribute of
+The Multi-Branch Pipeline Project module handles creating
+ Jenkins multi-branch pipeline projects.
+You may specify ``multibranch`` in the ``project-type`` attribute of
 the :ref:`Job` definition.
 
 You can add an SCM with the script-path, but for now only GIT is supported.
 
-Requires the Jenkins :jenkins-wiki:`Workflow Plugin <Workflow+Plugin>`.
+Requires the Jenkins :jenkins-wiki:`Pipeline Multibranch Plugin <Pipeline+Multibranch+Plugin>`.
 
 In order to use it for job-template you have to escape the curly braces by
 doubling them in the script: { -> {{ , otherwise it will be interpreted by the
 python str.format() command.
 
 :Job Parameters:
-  * **timer-trigger** (`str`): The timer spec for when the jobs
+  :arg str timer-trigger: The timer spec for when the jobs
    should be triggered.
-  * **env-properties** (`str`): Environment variables. (optional)
-  * **periodic-folder-spec** (`str`): The timer spec for when
+  :arg str env-properties: Environment variables. (optional)
+  :arg str periodic-folder-spec: The timer spec for when
    repository should be checked for branches.
-  * **periodic-folder-interval** (`str`): Interval for when the folder
+  :arg str periodic-folder-interval: Interval for when the folder
    should be checked.
-  * **prune-dead-branches** (`str`): If dead branches upon check
+  :arg str prune-dead-branches: If dead branches upon check
    should result in their job being dropped. (defaults to true) (optional)
-  * **number-to-keep** (`str`): How many builds should be kept.
+  :arg str number-to-keep: How many builds should be kept.
    (defaults to -1, all) (optional)
-  * **days-to-keep** (`str`): For how many days should a build be kept.
+  :arg str days-to-keep: For how many days should a build be kept.
    (defaults to -1, forever) (optional)
-  * **scm** (`str`): The SCM definition.
-  * **git** (`str`): Currently only GIT as SCM is supported,
-   use this as sub-structure of scm.
-  * **url** (`str`): The GIT URL.
-  * **credentials-id** (`str`): The credentialsId to use to connect to the GIT
-   repository URL.
+  :arg dict: List of SCM definitions.
+    :arg dict: SCM info structure. Currently only GIT as SCM is supported.
+        :arg str url: The GIT URL.
+        :arg str credentials-id: The credentialsId to use to connect to the GIT
+          repository URL.
+        :arg dict strategy: strategy for branches, if only strategy is listed,
+             that means commit notifications will be ignored for all branches
+            :arg list exceptions: list of branches for which we should
+                add the exception of not listening to commit notifications
+    :extensions:
+        * **basedir** (`string`) - Location relative to the workspace root to
+            clone to (default workspace)
+        * **changelog-against** (`dict`)
+            * **remote** (`string`) - name of repo that contains branch to
+              create changelog against (default 'origin')
+            * **branch** (`string`) - name of the branch to create changelog
+              against (default 'master')
+        * **choosing-strategy**: (`string`) - Jenkins class for selecting what
+            to build. Can be one of `default`,`inverse`, or `gerrit`
+            (default 'default')
+        * **clean** (`dict`)
+            * **after** (`bool`) - Clean the workspace after checkout
+            * **before** (`bool`) - Clean the workspace before checkout
+        * **excluded-users**: (`list(string)`) - list of users to ignore
+            revisions from when polling for changes.
+            (if polling is enabled, optional)
+        * **included-regions**: (`list(string)`) - list of file/folders to
+            include (optional)
+        * **excluded-regions**: (`list(string)`) - list of file/folders to
+            exclude (optional)
+        * **ignore-commits-with-messages** (`list(str)`) - Revisions committed
+            with messages matching these patterns will be ignored. (optional)
+        * **ignore-notify**: (`bool`) - Ignore notifyCommit URL accesses
+            (default false)
+        * **force-polling-using-workspace** (`bool`) - Force polling using
+            workspace (default false)
+        * **local-branch** (`string`) - Checkout/merge to local branch
+            (optional)
+        * **merge** (`dict`)
+            * **remote** (`string`) - name of repo that contains branch to
+              merge to (default 'origin')
+            * **branch** (`string`) - name of the branch to merge to
+            * **strategy** (`string`) - merge strategy. Can be one of
+              'default', 'resolve', 'recursive', 'octopus', 'ours',
+              'subtree'. (default 'default')
+            * **fast-forward-mode** (`string`) - merge fast-forward mode.
+              Can be one of 'FF', 'FF_ONLY' or 'NO_FF'. (default 'FF')
+        * **per-build-tag** (`bool`) - Create a tag in the workspace for every
+            build. (default is inverse of skip-tag if set, otherwise false)
+        * **prune** (`bool`) - Prune remote branches (default false)
+        * **scm-name** (`string`) - The unique scm name for this Git SCM
+            (optional)
+        * **shallow-clone** (`bool`) - Perform shallow clone (default false)
+        * **sparse-checkout** (`dict`)
+            * **paths** (`list`) - List of paths to sparse checkout. (optional)
+        * **submodule** (`dict`)
+            * **disable** (`bool`) - By disabling support for submodules you
+              can still keep using basic git plugin functionality and just have
+              Jenkins to ignore submodules completely as if they didn't exist.
+            * **recursive** (`bool`) - Retrieve all submodules recursively
+              (uses '--recursive' option which requires git>=1.6.5)
+            * **tracking** (`bool`) - Retrieve the tip of the configured
+              branch in .gitmodules (Uses '\-\-remote' option which requires
+              git>=1.8.2)
+            * **reference-repo** (`str`) - Path of the reference repo to use
+              during clone (optional)
+            * **timeout** (`int`) - Specify a timeout (in minutes) for
+              submodules operations (default 10).
+        * **timeout** (`str`) - Timeout for git commands in minutes (optional)
+        * **use-author** (`bool`): Use author rather than committer in Jenkin's
+            build changeset (default false)
+        * **wipe-workspace** (`bool`) - Wipe out workspace before build
+            (default true)
   * **includes** (`str`): Which branches should be included.
     (defaults to *, all)  (optional)
   * **excludes** (`str`): Which branches should be excluded.
     (defaults to empty, none)  (optional)
-  * **ignore-on-push-notifications** (`bool`): If a job should not trigger upon
-    push notifications. (defaults to false) (optional)
-  * **publisher-white-list** (`str`): A list of which publisher plugins
-    should be whitelisted. (fully qualified name) (optional)
 
-
-Job with inline script example:
+Job with all possible git configurations (1 or more git items are required):
 
     .. literalinclude::
       /../../tests/yamlparser/fixtures/project_pipeline_multibranch_template001.yaml
@@ -162,8 +225,6 @@ class PipelineMultiBranch(jenkins_jobs.modules.base.Base):
         sources.attrib['class'] = 'jenkins.branch.MultiBranchProject$BranchSourceList'
         sources.attrib['plugin'] = 'branch-api'
         sources_data = XML.SubElement(sources, 'data')
-        # TODO add multiple sources from scm
-        # For each git repo, there should be a BranchSource
 
         if 'scm' in project_def:
             for git_data in project_def['scm']:
@@ -216,7 +277,6 @@ class PipelineMultiBranch(jenkins_jobs.modules.base.Base):
         for item in git_element_list:
             XML.SubElement(git_source, item[0]).text = item[1]
 
-        # add extensions
         temp_xml = XML.SubElement(git_source, 'temp-git')
         git(self, temp_xml, data)
         temp_xml_scm = temp_xml.find('scm')
